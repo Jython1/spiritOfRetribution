@@ -391,6 +391,8 @@ GameObject:
   - component: {fileID: 1072943193}
   - component: {fileID: 1072943191}
   - component: {fileID: 1072943197}
+  - component: {fileID: 1072943198}
+  - component: {fileID: 1072943199}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -531,7 +533,69 @@ MonoBehaviour:
   _mouseSensitivity: 5
   _jumpHeight: 2
   verticalRotation: 0
-  _playerVelocity: {x: 0, y: 0, z: 0}
+  _playerMotion: {x: 0, y: 0, z: 0}
+--- !u!114 &1072943198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072943190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24a7ef7e7cdf79e95a5752b84fd12218, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: "\u0414\u043C\u0438\u0442\u0440\u0438\u0439"
+  level: 5
+  maxHealth: 70
+  armor: 10
+  endurance: 2
+  side: 0
+--- !u!114 &1072943199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072943190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a315547f128dd96c9cfec952d53b235, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isImmortal: 0
+--- !u!1 &1176125829
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1176125830}
+  m_Layer: 0
+  m_Name: CharacterSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1176125830
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1176125829}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -334.91827, y: -95.92169, z: -162.79736}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1369641684
 GameObject:
   m_ObjectHideFlags: 0
@@ -647,3 +711,4 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 1369641688}
   - {fileID: 1072943196}
+  - {fileID: 1176125830}

@@ -1,33 +1,40 @@
 using UnityEngine;
-public class SrcCharacterController : MonoBehaviour
+using System.Collections;
+public class PlayerController : MonoBehaviour
 {
     [SerializeField] float _gravity = -9.81f;
     [SerializeField] float _mouseSensitivity = 5.0f;
     [SerializeField] float _jumpHeight = 2.0f;
     [SerializeField] private float verticalRotation = 0f;
-    [SerializeField] private Vector3 _playerVelocity;
+    [SerializeField] private Vector3 _playerMotion;
+    private float _jumpDelay;
+
+    CharacterShoot _characterShoot;
 
     UnityEngine.CharacterController  _controller;
-    Vector3 _playerMotion;
-    
     private Transform cameraTransform;
+
+    private bool canJump;
     
    
     private void OnEnable() 
     {
         _controller = GetComponent<CharacterController>();
         cameraTransform = Camera.main.transform;
+        _jumpDelay = 0.7f;
+        canJump = false;
+        _characterShoot = GetComponent<CharacterShoot>();
     }
 
 
-    private void Update()
-    {
-	
+    private void Update()      
+    {  
+    
         PlayerMotion();
         PlayerVelocity();
         PlayerLookRight(Input.GetAxis("Mouse X") * _mouseSensitivity);
         PlayerLookUp(Input.GetAxis("Mouse Y")* _mouseSensitivity * -1);
-
+        Shoot();
         
     }
 
@@ -54,14 +61,6 @@ public class SrcCharacterController : MonoBehaviour
         _playerMotion = transform.TransformDirection(_playerMotion );
         }
 
-        /*
-        else if(Input.GetAxis("Horizontal")!=0 && Input.GetButtonDown("Jump") && _controller.isGrounded ||
-        Input.GetAxis("Vertical")!=0 && Input.GetButtonDown("Jump") && _controller.isGrounded)
-        {
-             _playerMotion = transform.TransformDirection(_playerMotion );
-        }*/
-
-        //_playerMotion = transform.TransformDirection(_playerMotion );
     }
 
     void PlayerVelocity()
@@ -71,6 +70,7 @@ public class SrcCharacterController : MonoBehaviour
         if (_controller.isGrounded && _playerMotion.y < 0)
         {
             _playerMotion.y = 0f;
+            StartCoroutine(DelayJump());
 
         }
 
@@ -78,9 +78,10 @@ public class SrcCharacterController : MonoBehaviour
 
         
 
-        if (Input.GetButtonDown("Jump") && _controller.isGrounded)
+        if (Input.GetButtonDown("Jump") && _controller.isGrounded && canJump)
         {
             _playerMotion.y += Mathf.Sqrt(_jumpHeight * -2.0f * _gravity);
+            
             
         }
     
@@ -88,6 +89,12 @@ public class SrcCharacterController : MonoBehaviour
 
 
     }
+
+    IEnumerator DelayJump()
+        {
+            yield return new WaitForSeconds(_jumpDelay);
+            canJump = true;
+        }
 
     void PlayerLookRight(float val)
     {
@@ -118,6 +125,15 @@ public class SrcCharacterController : MonoBehaviour
         }
 
         return speed;
+    }
+
+    void Shoot()
+    {
+        if (Input.GetButton("Fire1"))
+        {
+
+            _characterShoot.Shooting();
+        }
     }
 
 
