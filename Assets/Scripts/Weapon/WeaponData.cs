@@ -4,13 +4,14 @@ using UnityEngine;
 public class WeaponData : ScriptableObject
 {
 
-    [Header("Info")]
-    string name;
+    //[Header("Info")]
+    //public string name;
 
     [Header("Shooting")]
     public int maxAmmo;
-    public int currentAmmo;
     public float delayBetweenShots;
     public bool isInfinityAmmo = false;
+
+    public float distance;
     
 }

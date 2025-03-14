@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6fab810391cf247abc33cb14824977c, type: 3}
   m_Name: TestGun1
   m_EditorClassIdentifier: 
-  maxAmmo: 0
-  currentAmmo: 0
-  delayBetweenShots: 0
+  name: Test Gun
+  maxAmmo: 100
+  delayBetweenShots: 0.1
   isInfinityAmmo: 0
+  distance: 1000
