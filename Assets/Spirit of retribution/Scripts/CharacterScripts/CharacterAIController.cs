@@ -1,4 +1,5 @@
 using System;
+using CoverScript;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,36 +9,43 @@ public class CharacterAIController : MonoBehaviour
     [SerializeField]private float _sightRadius;
     [Range(0,360)]
     [SerializeField]private float _sightAngle;
+    [SerializeField]private float _defaultAttackDistance;
+    [SerializeField]private float _closeAttackDistance;
+    [SerializeField]private Transform []_patrolPoints;
+    [SerializeField]private float _delayBetweenPoints;
+    [SerializeField]private LayerMask _characterMask;
+    [SerializeField]private LayerMask _obstructionMask;
+    [SerializeField]private LayerMask _coverMask;
 
     private UnityEngine.AI.NavMeshAgent _agent;
 
     private int _currentPatrolPointID;
 
     private GameObject _enemy;
+    private GameObject _cover;
 
     private bool _isDoingQuest;
-    private Coroutine _patrolCoroutine;
+    private Vector3 _initialPoint;
 
-    [SerializeField]private Transform []_patrolPoints;
-    [SerializeField]private float _delayBetweenPoints;
-    [SerializeField]private LayerMask _characterMask;
-    [SerializeField]private LayerMask _obstructionMask;
+
 
     private void Start()
     {
+
+
         if(!gameObject.GetComponent<UnityEngine.AI.NavMeshAgent>() && !_isDoingQuest)
         return;
 
-
+        _initialPoint = gameObject.transform.position;
         _currentPatrolPointID = 0;
         _agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        StartCoroutine(FOVRoutine());
+        StartCoroutine(EnemyDetectionLoop());
 
         if(_patrolPoints.Length > 0)
-        Patrol();
+        StartCoroutine(PatrolingLoop());
     }
 
-    private IEnumerator FOVRoutine()
+    private IEnumerator EnemyDetectionLoop()
     {
         if(_enemy == null)
         {
@@ -46,53 +54,88 @@ public class CharacterAIController : MonoBehaviour
             while (true)
             {
                 yield return wait;
-                EnemyDetection();
-                
+                TryFindEnemy();
             }
 
         }
 
     }
 
-    IEnumerator WaitForOtherPoint()
+    IEnumerator PatrolingLoop()
     {
+        while(true)
+        {
+            GoToPosition(_patrolPoints[_currentPatrolPointID], 0f);
 
-        yield return new WaitForSeconds(_delayBetweenPoints);
-        _currentPatrolPointID = (_currentPatrolPointID + 1) % _patrolPoints.Length;
-        Patrol();
+            
+            while (_agent.pathPending || _agent.remainingDistance > _agent.stoppingDistance)
+            {
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(_delayBetweenPoints);
+
+            _currentPatrolPointID = (_currentPatrolPointID + 1) % _patrolPoints.Length;
+        }
     }
+
+    IEnumerator CoverDetectionLoop()
+    {
+        while(true)
+        {
+            if(_cover == null)
+            {
+                TryFindCover();
+            }
+            yield return new WaitForSeconds(0.1f);
+
+        }
+    }
+
+
 
     void Update()
     {
         if(_enemy != null)
         {
-            if (_patrolCoroutine != null)
+
+            if(!_cover)
             {
-                StopCoroutine(_patrolCoroutine);
-                _patrolCoroutine = null;
+
+                LookAtPosition(_enemy.transform);
+                GoToPosition(_enemy.transform, _defaultAttackDistance);
+                float distanceBetween = Vector3.Distance(transform.position, _enemy.transform.position);
+                StartCoroutine(CoverDetectionLoop());
+                if(distanceBetween > _sightRadius)
+                {
+                    _enemy = null;
+                    StartCoroutine(PatrolingLoop());
+                }
+
             }
 
-            LookAtPosition(_enemy.transform);
-            GoToPosition(_enemy.transform, 3f);
-            float distanceBetween = Vector3.Distance(transform.position, _enemy.transform.position);
-            if(distanceBetween > _sightRadius)
+            else if(_cover)
+            {
+                LookAtPosition(_enemy.transform);
+                GoToPosition(_cover.transform, 0f);
+                float distanceBetweenEnemy = Vector3.Distance(_enemy.transform.position, _cover.transform.position);
+                if(distanceBetweenEnemy > _defaultAttackDistance)
+                {
+                    _cover.GetComponent<Cover>().LeaveCover();
+                    _cover = null;
+                }
+
+                
+            }
+
+            if(Vector3.Distance(_enemy.transform.position, _initialPoint) >= 100)
             {
                 _enemy = null;
-                Patrol();
-            }
+                StartCoroutine(PatrolingLoop());
 
+            }
         }
 
-    }
-
-    private void Patrol()
-    {
-        GoToPosition(_patrolPoints[_currentPatrolPointID], 0f);
-
-        if (_patrolCoroutine != null)
-        StopCoroutine(_patrolCoroutine);
-
-        _patrolCoroutine = StartCoroutine(WaitForOtherPoint());
     }
 
 
@@ -116,7 +159,7 @@ public class CharacterAIController : MonoBehaviour
     }
 
 
-    private void EnemyDetection()
+    private void TryFindEnemy()
     {
         Collider[] rangeChecks = Physics.OverlapSphere(transform.position, _sightRadius, _characterMask);
 
@@ -136,6 +179,24 @@ public class CharacterAIController : MonoBehaviour
             }
             else
                 _enemy = null;
+        }
+    }
+
+    private void TryFindCover()
+    {
+        Collider[] coverChecks = Physics.OverlapSphere(transform.position, (_sightRadius / 2f), _coverMask);
+
+        foreach (Collider collider in coverChecks)
+        {
+            if (collider.TryGetComponent<Cover>(out Cover targetCover))
+            {
+                if (!targetCover.IsTaken())
+                {
+                    _cover = collider.gameObject;
+                    
+                    break;
+                }
+            }
         }
     }
 }

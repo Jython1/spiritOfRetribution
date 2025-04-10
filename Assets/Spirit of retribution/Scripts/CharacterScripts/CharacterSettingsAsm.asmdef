@@ -2,7 +2,8 @@
     "name": "CharacterSettingsAsm",
     "rootNamespace": "",
     "references": [
-        "GunsDataAsm"
+        "GunsDataAsm",
+        "LevelScriptsAsm"
     ],
     "includePlatforms": [],
     "excludePlatforms": [
