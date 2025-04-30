@@ -1,7 +1,8 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections;
-using ShootingEvent;  
+using ShootingEvent;
+using NoiseCauser;
 
 namespace PlayerController 
 {
@@ -16,6 +17,8 @@ namespace PlayerController
         private Rigidbody  _rigidbody;
         private Transform _cameraTransform;
         private bool _canJump;
+        private Noise _noiseMaker;
+        public Animator animator;
         
         private void OnEnable() 
         {
@@ -23,6 +26,17 @@ namespace PlayerController
             _jumpDelay = 0.7f;
             _canJump = false;
             _rigidbody = GetComponent<Rigidbody>();
+
+            if(!gameObject.GetComponent<Animator>())
+            return;
+            /*
+            _animator = gameObject.GetComponent<Animator>();
+
+            if(!gameObject.GetComponent<Noise>())
+            return;*/
+
+            _noiseMaker = gameObject.GetComponent<Noise>();
+
         }
 
 
@@ -32,6 +46,11 @@ namespace PlayerController
             PlayerLookRight(Input.GetAxis("Mouse X") * _mouseSensitivity);
             PlayerLookUp(Input.GetAxis("Mouse Y")* _mouseSensitivity * -1);
             Shoot();
+
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                //_noiseMaker.MakeNoise();
+            }
             
         }
 
@@ -70,10 +89,6 @@ namespace PlayerController
             _rigidbody.MovePosition(_rigidbody.position + worldDirection * GetSpeed() * Time.fixedDeltaTime);
         }
 
-        void PlayerVelocity()
-        {
-
-        }
 
         IEnumerator DelayJump()
             {

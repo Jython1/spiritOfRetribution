@@ -13,16 +13,24 @@ namespace CharStats
 
 
 
-        private enum Side
+        public enum Side
         {
+            [InspectorName("Гражданский")]
             Citizen,
+
+            [InspectorName("Спецназ")]
             Spetsnaz,
-            ZaulGardin,
+
+            [InspectorName("Зоул Гардинс")]
+            ZaulGardins,
+
+            [InspectorName("Иви")]
             Ivi
         }
 
-        [SerializeField] Side side;
-        
+
+
+        public Side GetSide { get; set; }
 
 
         public float GetMaxHealth()

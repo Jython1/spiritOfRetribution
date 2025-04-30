@@ -8,6 +8,7 @@ namespace HealthScript
         CharacterStats _characterStats;
         float currentHealth;
         [SerializeField] bool _isImmortal;
+        [SerializeField] bool _isDead;
         
 
 
@@ -53,6 +54,8 @@ namespace HealthScript
             float reducedDamageVal = maxHealth/(armor+level);
             return reducedDamageVal;
         }
+
+        public bool isDead() {return _isDead;}
         
 
     }
