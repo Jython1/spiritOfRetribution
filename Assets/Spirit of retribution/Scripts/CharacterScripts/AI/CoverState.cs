@@ -1,7 +1,7 @@
 using UnityEngine;
-using CharacterStateInterface;
 using AIController;
-using AttackStateScript;
+using CombatStateScript;
+using CharacterStateInterface;
 using CoverScript;
 
 namespace CoverStateScript
@@ -38,25 +38,15 @@ namespace CoverStateScript
             agent.speed = 3f;
             agent.acceleration = 8;
             agent.angularSpeed = 220f;
-            agent.stoppingDistance = 0.02f; 
+            agent.stoppingDistance = 0.02f;
+            agent.updateRotation = false; 
 
             agent.SetDestination(coverPosition);
 
 
-
-            if(distanceToEnemy <= 10f)
-            {
-                Attack();
-            }
-
-
-
         }
 
-         private void Attack()
-        {
-            //Debug.Log("Attacking");
-        }
+
 
         private void LootAtTarget(Vector3 direction)
         {

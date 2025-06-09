@@ -1,10 +1,11 @@
 using UnityEditor;
 using UnityEngine;
-using System.Collections;
+using System;
 using ShootingEvent;
 using NoiseCauser;
+using System.Collections;
 
-namespace PlayerController 
+namespace PlayerControllerScript
 {
     public class PlayerController : MonoBehaviour
     {
@@ -13,12 +14,16 @@ namespace PlayerController
         [SerializeField] private float _verticalRotation = 0f;
         [SerializeField] private Vector3 _playerMotion;
         private float _jumpDelay;
-        private CharacterShoot _characterShoot;
         private Rigidbody  _rigidbody;
         private Transform _cameraTransform;
         private bool _canJump;
         private Noise _noiseMaker;
+        
         public Animator animator;
+        public event Action onSwapWeaponsPressed;
+        public event Action onShootButtonPressed;
+
+
         
         private void OnEnable() 
         {
@@ -30,12 +35,10 @@ namespace PlayerController
             if(!gameObject.GetComponent<Animator>())
             return;
             /*
-            _animator = gameObject.GetComponent<Animator>();
-
             if(!gameObject.GetComponent<Noise>())
-            return;*/
+            return;
 
-            _noiseMaker = gameObject.GetComponent<Noise>();
+            _noiseMaker = gameObject.GetComponent<Noise>();*/
 
         }
 
@@ -50,6 +53,11 @@ namespace PlayerController
             if (Input.GetKeyDown(KeyCode.F))
             {
                 //_noiseMaker.MakeNoise();
+            }
+
+            if(Input.GetKeyDown(KeyCode.Q))
+            {
+                onSwapWeaponsPressed?.Invoke();
             }
             
         }
@@ -124,9 +132,10 @@ namespace PlayerController
 
         void Shoot()
         {
-            if (Input.GetButton("Fire1") && _characterShoot != null)
+            if (Input.GetButton("Fire1"))
             {
-                _characterShoot.Shooting();
+                onShootButtonPressed?.Invoke();
+                
             }
         }
 

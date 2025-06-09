@@ -1,15 +1,16 @@
 using UnityEngine;
 using CharStats;
+using System;
 
 namespace HealthScript
 {
     public class Health : MonoBehaviour
     {
         CharacterStats _characterStats;
-        float currentHealth;
+        private float _currentHealth;
         [SerializeField] bool _isImmortal;
         [SerializeField] bool _isDead;
-        
+        public event Action onDeath;
 
 
         void Awake()
@@ -17,45 +18,61 @@ namespace HealthScript
             if(!GetComponent<CharacterStats>())
             return;
             _characterStats = GetComponent<CharacterStats>();
-            currentHealth = _characterStats.GetMaxHealth();
+            _currentHealth = _characterStats.GetMaxHealth();
         }
 
         private void Update() {
             if(Input.GetKeyDown(KeyCode.I))
             {
-                GetDamage(600);
-                Debug.Log(currentHealth);
+                TakeDamage(40);
             }
         }
 
-        void GetDamage(float value)
+        public void TakeDamage(float value)
         {
-            if(_isImmortal != true)
+            if(_isImmortal || _currentHealth <= 0)
+            return;
+
+            _currentHealth -= value;
+
+
+            if(_currentHealth <= 0)
             {
+                onDeath?.Invoke();
+                _isDead = true;
+            }
+
+           /* {
+
+                
                 float damage = value - ReducedDamageValue();
                 damage = Mathf.Clamp(damage, 2, value);
                 currentHealth = currentHealth - damage;
                 currentHealth = Mathf.Clamp(currentHealth, 0, _characterStats.GetMaxHealth());
-            }
+            }*/
 
         }
 
         void AddHealth(float value)
         {
-            currentHealth += value;
-            currentHealth = Mathf.Clamp(currentHealth, 0, _characterStats.GetMaxHealth());
+            _currentHealth += value;
+            _currentHealth = Mathf.Clamp(_currentHealth, 0, _characterStats.GetMaxHealth());
         }
 
         public float ReducedDamageValue()
         {
             float maxHealth = _characterStats.GetMaxHealth();
             float armor = _characterStats.GetArmor();
-            int level = _characterStats.GetLevel();
+            int level = _characterStats.GetCurrentLevel();
             float reducedDamageVal = maxHealth/(armor+level);
             return reducedDamageVal;
         }
 
-        public bool isDead() {return _isDead;}
+        public bool isDead() => _isDead;
+
+        public float GetCurrentHealth() => _currentHealth;
+
+        public float GetMaxHealth() => _characterStats.GetMaxHealth();
         
 
     }

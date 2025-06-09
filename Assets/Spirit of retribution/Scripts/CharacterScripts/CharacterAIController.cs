@@ -8,116 +8,147 @@ using HealthScript;
 using CharacterStateInterface;
 using PatrolStateScript;
 using PerceptionScript;
-using AttackStateScript;
+using CombatStateScript;
 using CoverStateScript;
+using CharacterAttackScript;
+using ReturnStateScript;
+
+
 
 namespace AIController
 {
+    [RequireComponent(typeof(Rigidbody))]
+    [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(UnityEngine.AI.NavMeshAgent))]
+    [RequireComponent(typeof(Health))]
     public class CharacterAIController : MonoBehaviour
     {
-        private ICharacterState _currentState;
-        public Transform[] patrolPoints;
 
+
+        private ICharacterState _currentState;
+
+        [Header("Perception")]
+        public Transform[] patrolPoints;
         public LayerMask characterMask;
         public LayerMask coverMask;
+        public LayerMask obstructionMask;
         public float detectionRadius = 5f;
         public float sightAngle = 120f;
-        public LayerMask obstructionMask;
+
+        [Header("Combat Behavior")]
+        public float maxDistanceFromCover;
+        public float maxDistanceFromStart;
+
         private PerceptionSystem _perception;
-        private int _currentPatrolIndex;
         private UnityEngine.AI.NavMeshAgent _agent;
         private GameObject _currentEnemy;
+        private GameObject _detectedCover;
         private bool _isInCover;
+
         private Rigidbody _rb;
         private Animator _animator;
-        private Vector3 _initialLocation;
+        private Transform _initialLocation;
+        private Health _healthComp;
 
-        
+        private CharacterAttack _characterAttack;
 
-        private void Start() 
+        private void Start()
         {
-            if(!gameObject.GetComponent<Rigidbody>())
-            return;
-            
-            _rb = gameObject.GetComponent<Rigidbody>();
+            _rb = GetComponent<Rigidbody>();
+            _animator = GetComponent<Animator>();
+            _agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+            _healthComp = GetComponent<Health>();
 
+            _initialLocation = transform;
+            _perception = new PerceptionSystem(transform, detectionRadius, sightAngle, characterMask, coverMask, obstructionMask);
+
+            _healthComp.onDeath += Death;
 
             SetPatrol();
 
-            _perception = new PerceptionSystem(gameObject.transform, detectionRadius, sightAngle, characterMask, coverMask, obstructionMask);
-
-            if(!gameObject.GetComponent<Animator>())
-            return;
-
-            _animator = gameObject.GetComponent<Animator>();
-
-            if(!gameObject.GetComponent<UnityEngine.AI.NavMeshAgent>())
-            return;
-
-            _agent = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            _initialLocation = gameObject.transform.position;
 
         }
 
-        private void Update() 
+        private void Update()
         {
-            if (!_agent)
+            if (_agent == null || _healthComp.isDead())
                 return;
+
+            //_agent.isStopped = false;
 
             _currentState?.Execute();
 
-  
-            float actualSpeed = _agent.velocity.magnitude;
+            HandleCharacterAttack();
+            HandleAnimation();
+            HandleCoverState();
+            HandleEnemyDetection();
+            CheckIfReturn();
+        }
 
-            if (actualSpeed < 0.1f)
-                actualSpeed = 0f;
+        private void HandleAnimation()
+        {
+            float actualSpeed = _agent.velocity.magnitude;
+            if (actualSpeed < 0.1f) actualSpeed = 0f;
 
             float currentSpeed = _animator.GetFloat("Speed");
             float smoothedSpeed = Mathf.Lerp(currentSpeed, actualSpeed, Time.deltaTime * 10f);
             _animator.SetFloat("Speed", smoothedSpeed);
+        }
 
-            if (_isInCover)
+        private void HandleCoverState()
+        {
+            if (!_isInCover || !_currentEnemy) return;
+
+            float distance = Vector3.Distance(transform.position, _currentEnemy.transform.position);
+            if (distance >= maxDistanceFromCover)
             {
-                float distanceFromStartToEnemy = Vector3.Distance(_initialLocation, _currentEnemy.transform.position);
-                if(distanceFromStartToEnemy >= 50f)
-                {
-                    SetPatrol();
-                }
-
-                float distanceToEnemy = Vector3.Distance(gameObject.transform.position, _currentEnemy.transform.position);
-                if(distanceToEnemy >= 15f)
-                {
-                    _isInCover = false;
-                    //.GetComponent<Cover>().LeaveCover();
-                }
-                return;
+                _isInCover = false;
+                _detectedCover?.GetComponent<Cover>()?.LeaveCover();
+                //SetState(new AttackState(this, _currentEnemy));
             }
+        }
 
+        private void HandleCharacterAttack()
+        {
+            if (!_characterAttack)
+                return;
+
+            _characterAttack?.Execute();
+        }
+
+        private void HandleEnemyDetection()
+        {
             if (_currentEnemy)
             {
-                var detectedCover = _perception.DetectCover();
-                if (!detectedCover)
-                    return;
-
-                SetState(new CoverState(this, detectedCover, _currentEnemy));
-                detectedCover.GetComponent<Cover>().TakeCover();
-                _isInCover = true;
+                _detectedCover = _perception.DetectCover();
+                if (_detectedCover)
+                {
+                    _detectedCover.GetComponent<Cover>()?.TakeCover();
+                    _isInCover = true;
+                    SetState(new CoverState(this, _detectedCover, _currentEnemy));
+                }
                 return;
             }
 
             var detectedEnemy = _perception.DetectEnemy();
-            if (!detectedEnemy)
-                return;
-
-            _currentEnemy = detectedEnemy;
-            SetState(new AttackState(this, _currentEnemy));
+            if (detectedEnemy)
+            {
+                _currentEnemy = detectedEnemy;
+                SetState(new CombatState(this, _currentEnemy));
+                _characterAttack = GetComponent<CharacterAttack>();
+                _characterAttack?.Initialize(_currentEnemy);
+            }
         }
 
-        public float GetSpeed()
+        public void CheckIfReturn()
         {
-                float speed = _agent.velocity.magnitude;  
-                if (speed < 0.1f) speed = 0f;
-                return speed;
+            if (!_currentEnemy) return;
+
+            float distance = Vector3.Distance(_initialLocation.position, _currentEnemy.transform.position);
+            if (distance >= maxDistanceFromStart)
+            {
+                SetState(new ReturningState(this, _initialLocation));
+            }
         }
 
         public void SetState(ICharacterState newState)
@@ -125,23 +156,42 @@ namespace AIController
             _currentState = newState;
         }
 
-        public UnityEngine.AI.NavMeshAgent GetAgent()
-        {
-            return _agent;
-        }
+        public UnityEngine.AI.NavMeshAgent GetAgent() => _agent;
 
         public void SetPatrol()
         {
-            SetState(new PatrolState(this ,patrolPoints));
+            SetState(new PatrolState(this, patrolPoints));
             _currentEnemy = null;
         }
 
         public bool IsInCover
         {
-            get { return _isInCover; }
-            set {_isInCover = value;}
+            get => _isInCover;
+            set => _isInCover = value;
         }
 
+        private void Death()
+        {
+            _agent.isStopped = true;
+            _animator.SetTrigger("Death");
+            RemoveTargets();
+            EnemyManager.Instance?.UnregisterAttacker(transform);
+            StartCoroutine(RemoveCharacter());
+        }
+
+        public void RemoveTargets()
+        {
+            _currentEnemy = null;
+            _isInCover = false;
+        }
+
+        private IEnumerator RemoveCharacter()
+        {
+            yield return new WaitForSeconds(10);
+            Destroy(gameObject);
+        }
+
+        public CharacterAttack GetCharacterAttack() => _characterAttack;
     }
 }
 

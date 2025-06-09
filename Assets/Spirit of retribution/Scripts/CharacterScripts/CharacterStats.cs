@@ -5,11 +5,12 @@ namespace CharStats
     public class CharacterStats : MonoBehaviour
     {
 
-        [SerializeField] string name;
-        [SerializeField] int level = 1;
-        [SerializeField] float maxHealth;
-        [SerializeField] float armor;
-        [SerializeField] float endurance;
+        [SerializeField] string _name;
+        [SerializeField] int _currentLevel;
+        [SerializeField] float _maxHealth;
+        [SerializeField] float _armor;
+        [SerializeField] float _endurance;
+
 
 
 
@@ -28,45 +29,67 @@ namespace CharStats
             Ivi
         }
 
+        public enum CharacterHierarchy
+        {
+            [InspectorName("Босс")]
+            Boss,
 
+            [InspectorName("Элита")]
+            Elite,
+            
+            [InspectorName("Обычный персонаж")]
+            Normal
+        }
+        [SerializeField] private Side _side = Side.Citizen;
+        [SerializeField] private CharacterHierarchy _hierarchy = CharacterHierarchy.Normal;
 
-        public Side GetSide { get; set; }
+        public Side GetSide 
+        { 
+            get => _side; 
+            set => _side = value; 
+        }
 
+        public CharacterHierarchy Hierarchy 
+        { 
+            get => _hierarchy; 
+            set => _hierarchy = value; 
+        }
 
         public float GetMaxHealth()
         {
-            return maxHealth;
+            return _maxHealth;
         }
 
         public float GetArmor()
         {
-            return armor;
+            return _armor;
         }
 
         public float GetEndurance()
         {
-            return endurance;
+            return _endurance;
         }
 
-        public int GetLevel()
+        public int GetCurrentLevel()
         {
-            return level;
+            return _currentLevel;
         }
 
         public void IncreaseLevel()
         {
-            level++;
+            _currentLevel++;
         }
 
         public void SetName(string value)
         {
-            name = value;
+            _name = value;
         }
 
         public string GetName()
         {
-            return name;
+            return _name;
         }
+
 
     }
 
