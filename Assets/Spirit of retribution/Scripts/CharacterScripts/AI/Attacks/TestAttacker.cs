@@ -25,12 +25,12 @@ public class TestAttacker : CharacterAttack
 
     private void FarAttack()
     {
-        Debug.Log("Far attack");
+        //Debug.Log("Far attack");
     }
 
     private void CloseAttack()
     {
-        Debug.Log("Close attack");
+        //Debug.Log("Close attack");
     }
      
 }

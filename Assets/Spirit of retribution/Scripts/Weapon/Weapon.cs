@@ -1,5 +1,6 @@
 using UnityEngine;
 using WeaponControllerScript;
+using NoiseCauser;
 
 namespace WeaponScript
 {
@@ -9,7 +10,14 @@ namespace WeaponScript
         public float damage;
         public int maxAmmo;
         public int ammoOnStart;
-        public float fireRate;
+
+        public float maxSpreadAngle = 5f;
+
+        [Range(0f, 1f)]
+        public float accuracy = 0.8f; 
+
+        public float defaultNoiseRadius;
+        public float fireDistance;
         private Rigidbody _rb;
         private bool _isEquiped;
         private int _currentAmmo;
@@ -18,6 +26,10 @@ namespace WeaponScript
         public bool isInfinityAmmo;
 
         private GameObject _shootCenter;
+        private Noise _noiseEmitter;
+        
+
+        
 
         public enum WeaponType
         {
@@ -29,15 +41,32 @@ namespace WeaponScript
         public abstract void Shoot();
 
 
-        private void Start() 
+        private void Start()
         {
-            if(!gameObject.GetComponent<Rigidbody>())
-            return;
+            if (!gameObject.GetComponent<Rigidbody>())
+                return;
 
             _rb = gameObject.GetComponent<Rigidbody>();
             _canShoot = true;
             _currentAmmo = Mathf.Clamp(ammoOnStart, 0, maxAmmo);
 
+            if (!gameObject.GetComponent<Noise>())
+                return;
+
+            _noiseEmitter = gameObject.GetComponent<Noise>();
+
+        }
+
+        protected Vector3 CalculateSpread()
+        {
+            float currentSpread = maxSpreadAngle * (1f - accuracy);
+
+            Vector3 spreadDirection = Quaternion.Euler(
+                Random.Range(-currentSpread, currentSpread),
+                Random.Range(-currentSpread, currentSpread),
+                0) * ShootCenter.transform.forward;
+
+            return spreadDirection;
         }
 
 
@@ -45,31 +74,31 @@ namespace WeaponScript
         {
             if (col.CompareTag("Player"))
             {
-                if(!col.gameObject.GetComponent<WeaponController>())
-                return;
+                if (!col.gameObject.GetComponent<WeaponController>())
+                    return;
 
                 var weaponController = col.gameObject.GetComponent<WeaponController>();
                 weaponController.EquipWeapon(gameObject);
-                SetEquiped(); 
+                SetEquiped();
             }
         }
 
         public void SetEquiped()
         {
-            foreach(Collider c in GetComponents<Collider>()) 
+            foreach (Collider c in GetComponents<Collider>())
                 c.enabled = false;
 
             _rb.isKinematic = true;
-        _isEquiped = true;
+            _isEquiped = true;
         }
 
         public void SetUnequiped()
         {
-            foreach(Collider c in GetComponents<Collider>())
+            foreach (Collider c in GetComponents<Collider>())
                 c.enabled = true;
 
             _rb.isKinematic = false;
-        _isEquiped = false;
+            _isEquiped = false;
         }
 
         public int GetAmmo()
@@ -96,6 +125,12 @@ namespace WeaponScript
         {
             get => _shootCenter;
             set => _shootCenter = value;
+        }
+
+        public void MakeNoise()
+        {
+            _noiseEmitter.MakeNoise(defaultNoiseRadius);
+
         }
 
     }

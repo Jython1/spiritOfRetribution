@@ -36,7 +36,7 @@ namespace PatrolStateScript
                 return;
 
             var agent = _aiController.GetAgent();
-
+            agent.radius = 0.45f;
             agent.speed = 1f;
             agent.acceleration = 4;
             agent.angularSpeed = 120f;

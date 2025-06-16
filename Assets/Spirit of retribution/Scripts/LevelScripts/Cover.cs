@@ -7,6 +7,7 @@ namespace CoverScript
 
     public class Cover : MonoBehaviour
     {
+        public bool shouldCrouch;
         private bool _isTaken;
         private bool _isWaiting;
 

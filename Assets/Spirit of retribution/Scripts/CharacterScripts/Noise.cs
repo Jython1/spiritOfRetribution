@@ -1,28 +1,28 @@
 using UnityEngine;
+using PerceptionScript;
+using AIController;
 
 namespace NoiseCauser
 {
     public class Noise : MonoBehaviour
     {
 
-        [SerializeField] private float _noiseRadius = 5f;
-        [SerializeField] private LayerMask _listenerMask;
-/*
-        public void MakeNoise()
-        {
-            Collider[] listeners = Physics.OverlapSphere(transform.position, _noiseRadius, _listenerMask);
-            
 
-            foreach (Collider listener in listeners)
+        public void MakeNoise(float noiseRadius)
+        {
+            Collider[] hits = Physics.OverlapSphere(transform.position, noiseRadius);
+            foreach (var hit in hits)
             {
-                if (listener.TryGetComponent<CharacterPerception>(out var perception))
+                if (hit.TryGetComponent<CharacterAIController>(out CharacterAIController aiController))
                 {
-                    perception.ReceiveNoise(transform.position);
+                    aiController.GetPerception().ReceiveNoise(transform.position);
+                    Debug.Log(transform.position);
                 }
             }
 
+        }
 
-        }*/
+        
     }
 
 }

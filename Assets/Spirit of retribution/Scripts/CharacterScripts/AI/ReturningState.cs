@@ -4,51 +4,46 @@ using AIController;
 
 namespace ReturnStateScript
 {
-    public class ReturningState: ICharacterState 
+    public class ReturningState : ICharacterState
     {
-        private CharacterAIController _aiController;
-        private Transform _returningPosition;
+        private readonly CharacterAIController _aiController;
+        private readonly Vector3 _returningPosition;
 
-        public ReturningState(CharacterAIController aiController, Transform returningPosition)
+        private const float ArrivalThreshold = 0.5f;
+
+        public ReturningState(CharacterAIController aiController, Transform returningTransform)
         {
             _aiController = aiController;
-            _returningPosition = returningPosition;
-
+            _returningPosition = returningTransform.position;
         }
-
-
 
         public void Execute()
         {
-
             var agent = _aiController.GetAgent();
 
-            agent.speed = 3f;
-            agent.acceleration = 4;
-            agent.angularSpeed = 120f;
-            agent.stoppingDistance = 0f; 
-            agent.updateRotation = true; 
-            agent.SetDestination(_returningPosition.position);
+            ConfigureAgent(agent);
+            agent.SetDestination(_returningPosition);
 
-            float distanceToTarget = Vector3.Distance(agent.transform.position, _returningPosition.position);
-
-
-            if (!agent.pathPending &&
-                distanceToTarget <= 0.5f &&
-                agent.velocity.sqrMagnitude < 0.01f)
+            if (HasArrived(agent))
             {
-                _aiController.SetPatrol();
+                _aiController.SetPatrolState();
                 _aiController.RemoveTargets();
             }
-
-            
         }
 
+        private void ConfigureAgent(UnityEngine.AI.NavMeshAgent agent)
+        {
+            agent.speed = 3f;
+            agent.acceleration = 4f;
+            agent.angularSpeed = 120f;
+            agent.stoppingDistance = 0f;
+            agent.updateRotation = true;
+        }
 
+        private bool HasArrived(UnityEngine.AI.NavMeshAgent agent)
+        {
+            float distance = Vector3.Distance(agent.transform.position, _returningPosition);
+            return !agent.pathPending && distance <= ArrivalThreshold && agent.velocity.sqrMagnitude < 0.01f;
+        }
     }
-
-
-        
-    
-
 }

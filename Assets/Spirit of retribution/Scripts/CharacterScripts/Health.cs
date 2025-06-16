@@ -30,26 +30,25 @@ namespace HealthScript
 
         public void TakeDamage(float value)
         {
-            if(_isImmortal || _currentHealth <= 0)
-            return;
+            if (_isImmortal || _currentHealth <= 0)
+                return;
 
-            _currentHealth -= value;
+            float reducedDamage = CalculateReducedDamage(
+                value,
+                _characterStats.GetArmor(),
+                _characterStats.GetCurrentLevel(),
+                _characterStats.Hierarchy == CharacterStats.CharacterHierarchy.Elite,
+                _characterStats.Hierarchy == CharacterStats.CharacterHierarchy.Boss
+            );
 
+            _currentHealth -= reducedDamage;
+            _currentHealth = Mathf.Max(_currentHealth, 0); // защита от отрицательных значений
 
-            if(_currentHealth <= 0)
+            if (_currentHealth <= 0)
             {
                 onDeath?.Invoke();
                 _isDead = true;
             }
-
-           /* {
-
-                
-                float damage = value - ReducedDamageValue();
-                damage = Mathf.Clamp(damage, 2, value);
-                currentHealth = currentHealth - damage;
-                currentHealth = Mathf.Clamp(currentHealth, 0, _characterStats.GetMaxHealth());
-            }*/
 
         }
 
@@ -59,13 +58,20 @@ namespace HealthScript
             _currentHealth = Mathf.Clamp(_currentHealth, 0, _characterStats.GetMaxHealth());
         }
 
-        public float ReducedDamageValue()
+        private float CalculateReducedDamage(float baseDamage, float armor, int level, bool isElite, bool isBoss)
         {
-            float maxHealth = _characterStats.GetMaxHealth();
-            float armor = _characterStats.GetArmor();
-            int level = _characterStats.GetCurrentLevel();
-            float reducedDamageVal = maxHealth/(armor+level);
-            return reducedDamageVal;
+            float baseReduction = armor / (armor + 50f + level * 5f);
+
+            if (isElite)
+                baseReduction += 0.2f;
+
+            if (isBoss)
+                baseReduction += 0.3f;
+
+            baseReduction = Mathf.Clamp(baseReduction, 0f, 0.8f); // ограничение по максимуму
+
+            float finalDamage = baseDamage * (1f - baseReduction);
+            return finalDamage;
         }
 
         public bool isDead() => _isDead;

@@ -10,25 +10,7 @@ namespace CharStats
         [SerializeField] float _maxHealth;
         [SerializeField] float _armor;
         [SerializeField] float _endurance;
-
-
-
-
-        public enum Side
-        {
-            [InspectorName("Гражданский")]
-            Citizen,
-
-            [InspectorName("Спецназ")]
-            Spetsnaz,
-
-            [InspectorName("Зоул Гардинс")]
-            ZaulGardins,
-
-            [InspectorName("Иви")]
-            Ivi
-        }
-
+        [SerializeField] CharacterSide _characterSide;
         public enum CharacterHierarchy
         {
             [InspectorName("Босс")]
@@ -36,23 +18,17 @@ namespace CharStats
 
             [InspectorName("Элита")]
             Elite,
-            
+
             [InspectorName("Обычный персонаж")]
             Normal
         }
-        [SerializeField] private Side _side = Side.Citizen;
         [SerializeField] private CharacterHierarchy _hierarchy = CharacterHierarchy.Normal;
 
-        public Side GetSide 
-        { 
-            get => _side; 
-            set => _side = value; 
-        }
 
-        public CharacterHierarchy Hierarchy 
-        { 
-            get => _hierarchy; 
-            set => _hierarchy = value; 
+        public CharacterHierarchy Hierarchy
+        {
+            get => _hierarchy;
+            set => _hierarchy = value;
         }
 
         public float GetMaxHealth()
@@ -88,6 +64,11 @@ namespace CharStats
         public string GetName()
         {
             return _name;
+        }
+
+        public CharacterSide GetCharacterSide()
+        {
+            return _characterSide;
         }
 
 
